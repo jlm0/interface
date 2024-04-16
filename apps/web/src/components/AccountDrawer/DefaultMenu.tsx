@@ -11,6 +11,7 @@ import AuthenticatedHeader from './AuthenticatedHeader'
 import LanguageMenu from './LanguageMenu'
 import LocalCurrencyMenu from './LocalCurrencyMenu'
 import SettingsMenu from './SettingsMenu'
+import { capsuleLoggedInAtom, capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
 
 const DefaultMenuWrap = styled(Column)`
   width: 100%;
@@ -29,6 +30,8 @@ export const miniPortfolioMenuStateAtom = atom(MenuState.DEFAULT)
 
 function DefaultMenu({ drawerOpen }: { drawerOpen: boolean }) {
   const { account } = useWeb3React()
+  const [isCapsuleAuthenticated] = useAtom(capsuleLoggedInAtom)
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
   const isAuthenticated = !!account
 
   const [menu, setMenu] = useAtom(miniPortfolioMenuStateAtom)
@@ -58,7 +61,9 @@ function DefaultMenu({ drawerOpen }: { drawerOpen: boolean }) {
   const SubMenu = useMemo(() => {
     switch (menu) {
       case MenuState.DEFAULT:
-        return isAuthenticated ? (
+        return isCapsuleAuthenticated ? (
+          <AuthenticatedHeader account={capsuleAddress!} openSettings={openSettings} />
+        ) : isAuthenticated ? (
           <AuthenticatedHeader account={account} openSettings={openSettings} />
         ) : (
           <WalletModal openSettings={openSettings} />
@@ -87,6 +92,8 @@ function DefaultMenu({ drawerOpen }: { drawerOpen: boolean }) {
     openLanguageSettings,
     openLocalCurrencySettings,
     openSettings,
+    isCapsuleAuthenticated,
+    capsuleAddress,
   ])
 
   return <DefaultMenuWrap>{SubMenu}</DefaultMenuWrap>

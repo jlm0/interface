@@ -36,6 +36,7 @@ import MiniPortfolio from './MiniPortfolio'
 import { portfolioFadeInAnimation } from './MiniPortfolio/PortfolioRow'
 import { useAccountDrawer } from './MiniPortfolio/hooks'
 import { Status } from './Status'
+import { useResetCapsule } from 'components/WalletModal/useCapsuleOption'
 
 const AuthenticatedHeaderWrapper = styled.div`
   padding: 20px 16px;
@@ -112,11 +113,13 @@ export default function AuthenticatedHeader({ account, openSettings }: { account
   const isUnclaimed = useUserHasAvailableClaim(account)
   const connection = getConnection(connector)
   const openClaimModal = useToggleModal(ApplicationModal.ADDRESS_CLAIM)
+  const resetCapsule = useResetCapsule()
   const disconnect = useCallback(() => {
     connector.deactivate?.()
     connector.resetState()
     dispatch(setRecentConnectionDisconnected())
-  }, [connector, dispatch])
+    resetCapsule()
+  }, [connector, dispatch, resetCapsule])
 
   const [accountDrawerOpen, toggleAccountDrawer] = useAccountDrawer()
 

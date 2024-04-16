@@ -28,6 +28,8 @@ import { useUnitagByAddressWithoutFlag } from 'uniswap/src/features/unitags/hook
 import { ButtonSecondary } from '../Button'
 import StatusIcon from '../Identicon/StatusIcon'
 import { RowBetween } from '../Row'
+import { useAtom } from 'jotai'
+import { capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
 
 // https://stackoverflow.com/a/31617326
 const FULL_BORDER_RADIUS = 9999
@@ -141,7 +143,8 @@ function Web3StatusInner() {
   const connectionReady = useConnectionReady()
   const activeWeb3 = useWeb3React()
   const lastWeb3 = useLast(useWeb3React(), ignoreWhileSwitchingChain)
-  const { account, connector } = useMemo(() => (activeWeb3.account ? activeWeb3 : lastWeb3), [activeWeb3, lastWeb3])
+  const { connector } = useMemo(() => (activeWeb3.account ? activeWeb3 : lastWeb3), [activeWeb3, lastWeb3])
+  const [account] = useAtom(capsuleWalletAddressAtom)
   const { unitag } = useUnitagByAddressWithoutFlag(account, Boolean(account))
   const { ENSName, loading: ENSLoading } = useENSName(account)
   const connection = getConnection(connector)

@@ -25,6 +25,8 @@ import {
   SwapState,
   parseIndependentFieldURLParameter,
 } from './types'
+import { capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
+import { useAtom } from 'jotai'
 
 export function useSwapContext() {
   return useContext(SwapContext)
@@ -118,6 +120,7 @@ export function useSwapActionHandlers(): {
 // from the current swap inputs, compute the best trade and return it.
 export function useDerivedSwapInfo(state: SwapState): SwapInfo {
   const { account } = useWeb3React()
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
 
   const {
     currencyState: { inputCurrency, outputCurrency },
@@ -188,7 +191,7 @@ export function useDerivedSwapInfo(state: SwapState): SwapInfo {
   const inputError = useMemo(() => {
     let inputError: ReactNode | undefined
 
-    if (!account) {
+    if (!capsuleAddress) {
       inputError = connectionReady ? <Trans>Connect wallet</Trans> : <Trans>Connecting wallet...</Trans>
     }
 

@@ -109,7 +109,10 @@
     "https://*.infura.io",
     "wss://relay.walletconnect.com",
     "wss://www.walletlink.org",
-    "wss://ws-us3.pusher.com/"
+    "wss://ws-us3.pusher.com/",
+    "https://api.beta.usecapsule.com/",
+    "https://app.beta.usecapsule.com/",
+    "wss://mpc-network.beta.usecapsule.com"
   ],
   "workerSrc": [
     "'self'",

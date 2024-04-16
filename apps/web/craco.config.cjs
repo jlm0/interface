@@ -78,6 +78,7 @@ module.exports = {
       new ProvidePlugin({
         // - react-markdown requires process.cwd
         process: 'process/browser.js',
+        Buffer: ['buffer', 'Buffer'],
       }),
       new VanillaExtractPlugin(),
       new RetryChunkLoadPlugin({
@@ -142,6 +143,12 @@ module.exports = {
         fallback: {
           // - react-markdown requires path
           path: require.resolve('path-browserify'),
+          crypto: require.resolve('crypto-browserify'),
+          stream: require.resolve('stream-browserify'),
+          url: false,
+          zlib: false,
+          https: false,
+          http: false,
         },
       })
 
@@ -205,6 +212,15 @@ module.exports = {
         loader: path.join(__dirname, 'scripts/terser-loader.js'),
         options: { compress: true, mangle: false },
       })
+
+      webpackConfig.module.rules.push({
+        test: /\.tsx?$/,
+        loader: "ts-loader",
+        options: {
+          transpileOnly: true,
+          configFile: "tsconfig.json",
+        },
+      });
 
       // Configure webpack optimization:
       webpackConfig.optimization = Object.assign(

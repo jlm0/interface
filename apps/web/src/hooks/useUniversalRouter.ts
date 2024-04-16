@@ -1,7 +1,7 @@
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { BigNumber } from '@ethersproject/bignumber'
 import { CustomUserProperties, SwapEventName } from '@uniswap/analytics-events'
-import { Percent } from '@uniswap/sdk-core'
+import { ChainId, Percent } from '@uniswap/sdk-core'
 import { FlatFeeOptions, SwapRouter, UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 import { FeeOptions, toHex } from '@uniswap/v3-sdk'
 import { useWeb3React } from '@web3-react/core'
@@ -22,6 +22,12 @@ import isZero from 'utils/isZero'
 import { didUserReject, swapErrorToUserReadableMessage } from 'utils/swapErrorToUserReadableMessage'
 import { getWalletMeta } from 'utils/walletMeta'
 import { PermitSignature } from './usePermitAllowance'
+import {
+  capsuleEthersProvider,
+  capsuleEthersSigner,
+  capsuleWalletAddressAtom,
+} from 'components/WalletModal/useCapsuleOption'
+import { useAtom } from 'jotai'
 
 /** Thrown when gas estimation fails. This class of error usually requires an emulator to determine the root cause. */
 class GasEstimationError extends Error {
@@ -54,12 +60,17 @@ export function useUniversalRouterSwapCallback(
   fiatValues: { amountIn?: number; amountOut?: number; feeUsd?: number },
   options: SwapOptions
 ) {
-  const { account, chainId, provider, connector } = useWeb3React()
+  //const { account, chainId, provider, connector } = useWeb3React()
+
   const analyticsContext = useTrace()
   const blockNumber = useBlockNumber()
   const getDeadline = useGetTransactionDeadline()
   const isAutoSlippage = useUserSlippageTolerance()[0] === 'auto'
   const portfolioBalanceUsd = useTotalBalancesUsdForAnalytics()
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
+  const account = capsuleAddress;
+  const chainId = ChainId.SEPOLIA;
+  const provider = capsuleEthersProvider;
 
   return useCallback(
     (): Promise<{ type: TradeFillType.Classic; response: TransactionResponse; deadline?: BigNumber }> =>
@@ -68,9 +79,9 @@ export function useUniversalRouterSwapCallback(
           if (!account) throw new Error('missing account')
           if (!chainId) throw new Error('missing chainId')
           if (!provider) throw new Error('missing provider')
-          if (!trade) throw new Error('missing trade')
-          const connectedChainId = await provider.getSigner().getChainId()
-          if (chainId !== connectedChainId) throw new WrongChainError()
+           if (!trade) throw new Error('missing trade')
+          // const connectedChainId = await provider.getSigner().getChainId()
+          // if (chainId !== connectedChainId) throw new WrongChainError()
 
           const deadline = await getDeadline()
 
@@ -93,7 +104,7 @@ export function useUniversalRouterSwapCallback(
           let gasLimit: BigNumber
           try {
             const gasEstimate = await provider.estimateGas(tx)
-            gasLimit = calculateGasMargin(gasEstimate)
+            gasLimit = calculateGasMargin(BigNumber.from(gasEstimate))
             trace.setData('gasLimit', gasLimit.toNumber())
           } catch (gasError) {
             sendAnalyticsEvent(SwapEventName.SWAP_ESTIMATE_GAS_CALL_FAILED, {
@@ -111,7 +122,7 @@ export function useUniversalRouterSwapCallback(
             { name: 'Send transaction', op: 'wallet.send_transaction' },
             async (walletTrace) => {
               try {
-                return await provider.getSigner().sendTransaction({ ...tx, gasLimit })
+                return (await capsuleEthersSigner.sendTransaction({ ...tx, gasLimit: gasLimit.toBigInt(),})) as any;
               } catch (error) {
                 if (didUserReject(error)) {
                   walletTrace.setStatus('cancelled')
@@ -133,10 +144,13 @@ export function useUniversalRouterSwapCallback(
             }),
             ...analyticsContext,
             // TODO (WEB-2993): remove these after debugging missing user properties.
-            [CustomUserProperties.WALLET_ADDRESS]: account,
-            [CustomUserProperties.WALLET_TYPE]: getConnection(connector).getProviderInfo().name,
-            [CustomUserProperties.PEER_WALLET_AGENT]: provider ? getWalletMeta(provider)?.agent : undefined,
-          })
+            [CustomUserProperties.WALLET_ADDRESS]: capsuleAddress,
+            // [CustomUserProperties.WALLET_TYPE]:
+            //   getConnection(connector).getProviderInfo().name,
+            // [CustomUserProperties.PEER_WALLET_AGENT]: provider
+            //   ? getWalletMeta(provider)?.agent
+            //   : undefined,
+          });
           if (tx.data !== response.data) {
             sendAnalyticsEvent(SwapEventName.SWAP_MODIFIED_IN_WALLET, {
               txHash: response.hash,
@@ -165,7 +179,7 @@ export function useUniversalRouterSwapCallback(
     [
       account,
       chainId,
-      provider,
+      provider,      
       trade,
       getDeadline,
       options.slippageTolerance,
@@ -175,7 +189,6 @@ export function useUniversalRouterSwapCallback(
       fiatValues,
       portfolioBalanceUsd,
       analyticsContext,
-      connector,
       blockNumber,
       isAutoSlippage,
     ]

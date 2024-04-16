@@ -8,6 +8,8 @@ import useInterval from 'lib/hooks/useInterval'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { TradeFillType } from 'state/routing/types'
 import { useHasPendingApproval, useHasPendingRevocation, useTransactionAdder } from 'state/transactions/hooks'
+import { capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
+import { useAtom } from 'jotai'
 
 enum ApprovalState {
   PENDING,
@@ -50,9 +52,10 @@ export default function usePermit2Allowance(
   tradeFillType?: TradeFillType
 ): Allowance {
   const { account } = useWeb3React()
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
   const token = amount?.currency
 
-  const { tokenAllowance, isSyncing: isApprovalSyncing } = useTokenAllowance(token, account, PERMIT2_ADDRESS)
+  const { tokenAllowance, isSyncing: isApprovalSyncing } = useTokenAllowance(token, capsuleAddress, PERMIT2_ADDRESS)
   const updateTokenAllowance = useUpdateTokenAllowance(amount, PERMIT2_ADDRESS)
   const revokeTokenAllowance = useRevokeTokenAllowance(token, PERMIT2_ADDRESS)
   const isApproved = useMemo(() => {
@@ -97,7 +100,7 @@ export default function usePermit2Allowance(
     return signature.details.token === token?.address && signature.spender === spender && signature.sigDeadline >= now
   }, [amount, now, signature, spender, token?.address])
 
-  const { permitAllowance, expiration: permitExpiration, nonce } = usePermitAllowance(token, account, spender)
+  const { permitAllowance, expiration: permitExpiration, nonce } = usePermitAllowance(token, capsuleAddress, spender)
   const updatePermitAllowance = useUpdatePermitAllowance(token, spender, nonce, setSignature)
   const isPermitted = useMemo(() => {
     if (!amount || !permitAllowance || !permitExpiration) return false

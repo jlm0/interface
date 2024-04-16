@@ -38,5 +38,5 @@ export function useSingleContractMultipleData(
 function useCallContext() {
   const { chainId } = useWeb3React()
   const latestBlock = useBlockNumber()
-  return { chainId, latestBlock }
+  return { chainId: ChainId.SEPOLIA, latestBlock }
 }

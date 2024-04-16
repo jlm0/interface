@@ -16,6 +16,7 @@ import { GetTheAppModal } from 'pages/Landing/components/DownloadApp/GetTheAppMo
 import { useModalIsOpen, useToggleModal } from 'state/application/hooks'
 import { ApplicationModal } from 'state/application/reducer'
 import { isDevelopmentEnv, isStagingEnv } from 'utils/env'
+import { CapsuleModalSetup } from 'components/WalletModal/useCapsuleOption'
 
 export default function TopLevelModals() {
   const addressClaimOpen = useModalIsOpen(ApplicationModal.ADDRESS_CLAIM)
@@ -32,6 +33,7 @@ export default function TopLevelModals() {
       <ConnectedAccountBlocked account={account} isOpen={accountBlocked} />
       <Bag />
       <UniwalletModal />
+      <CapsuleModalSetup />
 
       <Banners />
 

@@ -1,4 +1,4 @@
-import { Percent, TradeType } from '@uniswap/sdk-core'
+import { ChainId, Percent, TradeType } from '@uniswap/sdk-core'
 import { FlatFeeOptions } from '@uniswap/universal-router-sdk'
 import { FeeOptions } from '@uniswap/v3-sdk'
 import { useWeb3React } from '@web3-react/core'
@@ -19,6 +19,8 @@ import {
 import { currencyId } from '../utils/currencyId'
 import { useUniswapXSwapCallback } from './useUniswapXSwapCallback'
 import { useUniversalRouterSwapCallback } from './useUniversalRouter'
+import { capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
+import { useAtom } from 'jotai'
 
 export type SwapResult = Awaited<ReturnType<ReturnType<typeof useSwapCallback>>>
 
@@ -46,6 +48,7 @@ export function useSwapCallback(
   const addTransaction = useTransactionAdder()
   const addOrder = useAddOrder()
   const { account, chainId } = useWeb3React()
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
 
   const uniswapXSwapCallback = useUniswapXSwapCallback({
     trade: isUniswapXTrade(trade) ? trade : undefined,
@@ -67,7 +70,7 @@ export function useSwapCallback(
 
   return useCallback(async () => {
     if (!trade) throw new Error('missing trade')
-    if (!account || !chainId) throw new Error('wallet must be connected to swap')
+    if (!capsuleAddress) throw new Error('wallet must be connected to swap')
 
     const result = await swapCallback()
 
@@ -93,9 +96,9 @@ export function useSwapCallback(
 
     if (result.type === TradeFillType.UniswapX) {
       addOrder(
-        account,
+        capsuleAddress,
         result.response.orderHash,
-        chainId,
+        ChainId.SEPOLIA, // For Capsule POC
         result.response.deadline,
         swapInfo as UniswapXOrderDetails['swapInfo'],
         result.response.encodedOrder,
@@ -106,5 +109,5 @@ export function useSwapCallback(
     }
 
     return result
-  }, [account, addOrder, addTransaction, allowedSlippage, chainId, swapCallback, trade])
+  }, [account, addOrder, addTransaction, allowedSlippage, chainId, swapCallback, trade, capsuleAddress])
 }

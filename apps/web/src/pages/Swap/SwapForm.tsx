@@ -6,7 +6,7 @@ import {
   SharedEventName,
   SwapEventName,
 } from '@uniswap/analytics-events'
-import { Currency, CurrencyAmount, Token } from '@uniswap/sdk-core'
+import { ChainId, Currency, CurrencyAmount, Token } from '@uniswap/sdk-core'
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { Trace, TraceEvent, sendAnalyticsEvent, useTrace } from 'analytics'
@@ -67,6 +67,8 @@ import { didUserReject } from 'utils/swapErrorToUserReadableMessage'
 import { CurrencyState } from 'state/swap/types'
 import { getIsReviewableQuote } from '.'
 import { OutputTaxTooltipBody } from './TaxTooltipBody'
+import { capsuleLoggedInAtom, capsuleWalletAddressAtom } from 'components/WalletModal/useCapsuleOption'
+import { useAtom } from 'jotai'
 
 const SWAP_FORM_CURRENCY_SEARCH_FILTERS = {
   showCommonBases: true,
@@ -81,6 +83,8 @@ export function SwapForm({ disableTokenInputs = false, onCurrencyChange }: SwapF
   const connectionReady = useConnectionReady()
   const { account, chainId: connectedChainId, connector } = useWeb3React()
   const trace = useTrace()
+  const [isCapsuleAuthenticated] = useAtom(capsuleLoggedInAtom)
+  const [capsuleAddress] = useAtom(capsuleWalletAddressAtom)
 
   const { chainId, prefilledState, currencyState } = useSwapAndLimitContext()
   const { swapState, setSwapState, derivedSwapInfo } = useSwapContext()
@@ -612,7 +616,7 @@ export function SwapForm({ disableTokenInputs = false, onCurrencyChange }: SwapF
             <ButtonPrimary $borderRadius="16px" disabled={true}>
               <Trans>Connecting to {{ label: getChainInfo(switchingChain)?.label }}</Trans>
             </ButtonPrimary>
-          ) : connectionReady && !account ? (
+          ) : connectionReady && !account && !isCapsuleAuthenticated && !capsuleAddress ? (
             <TraceEvent
               events={[BrowserEvent.onClick]}
               name={InterfaceEventName.CONNECT_WALLET_BUTTON_CLICKED}
@@ -623,7 +627,7 @@ export function SwapForm({ disableTokenInputs = false, onCurrencyChange }: SwapF
                 <Trans>Connect wallet</Trans>
               </ButtonLight>
             </TraceEvent>
-          ) : chainId && chainId !== connectedChainId ? (
+          ) : chainId && chainId !== ChainId.SEPOLIA ? (
             <ButtonPrimary
               $borderRadius="16px"
               onClick={async () => {

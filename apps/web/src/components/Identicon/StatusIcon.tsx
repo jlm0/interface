@@ -14,6 +14,9 @@ import { getWalletMeta } from 'utils/walletMeta'
 import sockImg from '../../assets/svg/socks.svg'
 import { useHasSocks } from '../../hooks/useSocksBalance'
 import Identicon from '../Identicon'
+import UNISWAP_LOGO from '../../assets/wallets/uniswap-wallet-icon.png'
+import { useAtom } from 'jotai'
+import { capsuleLoggedInAtom } from 'components/WalletModal/useCapsuleOption'
 
 export const IconWrapper = styled.div<{ size?: number }>`
   position: relative;
@@ -83,11 +86,14 @@ const Socks = () => {
 const MiniWalletIcon = ({ connection, side }: { connection: Connection; side: 'left' | 'right' }) => {
   const isDarkMode = useIsDarkMode()
   const { provider } = useWeb3React()
+  const [isCapsuleAuthenticated] = useAtom(capsuleLoggedInAtom)
 
   const providerInfo = connection.getProviderInfo(isDarkMode)
 
   // Uses icon from wallet meta when available, otherwise uses icon from connection
-  const icon = (provider && getWalletMeta(provider)?.icons?.[0]) ?? providerInfo.icon
+  const icon = isCapsuleAuthenticated
+    ? UNISWAP_LOGO
+    : (provider && getWalletMeta(provider)?.icons?.[0]) ?? providerInfo.icon
 
   return (
     <MiniIconContainer side={side}>

@@ -19,6 +19,7 @@ import { DeprecatedInjectorMessage } from './Option'
 import PrivacyPolicyNotice from './PrivacyPolicyNotice'
 import { UniswapWalletOptions } from './UniswapWalletOptions'
 import { useOrderedConnections } from './useOrderedConnections'
+import UseCapsuleOption from './useCapsuleOption'
 
 const Wrapper = styled.div`
   ${flexColumnNoWrap};
@@ -88,7 +89,10 @@ export default function WalletModal({ openSettings }: { openSettings: () => void
       ) : (
         <Column gap="md" flex="1">
           <Row flex="1" align="flex-start">
-            <OptionGrid data-testid="option-grid">{orderedConnections}</OptionGrid>
+            <OptionGrid data-testid="option-grid">
+              {orderedConnections}
+              <UseCapsuleOption />
+            </OptionGrid>
           </Row>
           {showDeprecatedMessage && (
             <TextSectionWrapper>
